@@ -81,7 +81,7 @@ class HuggingFace:
         try:
             assert cls.api_key is not None, "Hugging Face API key is not set."
 
-            headers = { "Authorization": f"Bearer { cls.api_key }" }
+            headers = { "Authorization": f"Bearer { cls.api_key }","Content-Type": "application/json" }
             API_URL = "https://api-inference.huggingface.co/models/" + model
             inputs = {
                 "past_user_inputs": [system_prompt],
@@ -95,28 +95,35 @@ class HuggingFace:
                 else:
                     inputs["generated_responses"].extend(extract_content_values(message))
 
-            inputs["text"] = inputs["past_user_inputs"].pop(-1)
+            # For 'google/flan-t5-xxl' this model the input format is this
+            if model == 'google/flan-t5-xxl':
+                payload = {"inputs":inputs["past_user_inputs"].pop(-1)}
+            else:
+                inputs["text"] = inputs["past_user_inputs"].pop(-1)
 
-            payload = {
-                "inputs": inputs,
-                "max_length": max_tokens,
-                "temperature": temperature,
-                "min_length": min_tokens,
-                "top_k": top_k,
-            }
+                payload = {
+                    "inputs": inputs,
+                    "max_length": max_tokens,
+                    "temperature": temperature,
+                    "min_length": min_tokens,
+                    "top_k": top_k,
+                }
 
             data = json.dumps(payload)
             response = requests.request("POST", API_URL, headers=headers, data=data)
             response = json.loads(response.content.decode("utf-8"))
 
-            if response.get("error", None) == "Authorization header is invalid, use 'Bearer API_TOKEN'.":
-                print("Hugging Face API key is not correct.")
+            if model == 'google/flan-t5-xxl':
+                return response[0]["generated_text"]
+            else:
+                if response.get("error", None) == "Authorization header is invalid, use 'Bearer API_TOKEN'.":
+                    print("Hugging Face API key is not correct.")
 
-            if response.get("estimated_time", None):
-                print(f"Model is loading please wait for {response.get('estimated_time')}")
-                time.sleep(response.get("estimated_time"))
-                response = requests.request("POST", API_URL, headers=headers, data=data)
-                response = json.loads(response.content.decode("utf-8"))
+                if response.get("estimated_time", None):
+                    print(f"Model is loading please wait for {response.get('estimated_time')}")
+                    time.sleep(response.get("estimated_time"))
+                    response = requests.request("POST", API_URL, headers=headers, data=data)
+                    response = json.loads(response.content.decode("utf-8"))
 
             return response["generated_text"]
 
