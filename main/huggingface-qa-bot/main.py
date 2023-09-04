@@ -3,7 +3,7 @@ from textbase.models import HuggingFace
 from typing import List
 
 # Load your HuggingFace API key
-HuggingFace.api_key = "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"
+HuggingFace.api_key = "<API_KEY>"
 
 # We can ignore this if we set a default value for this argument is class defenition
 # Need to add this to ignore argument error. If we don't change the models file.

@@ -29,7 +29,7 @@ class OpenWeather:
 
 
 # Load your OpenWeather API key https://home.openweathermap.org/api_keys
-openWeather = OpenWeather("9fd394cabeeb8557de6f5fe17eeaaa18")
+openWeather = OpenWeather('<API_KEY>')
 
 @bot()
 def on_message(message_history: List[Message], state: dict = None):
